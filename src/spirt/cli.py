@@ -26,6 +26,7 @@ def version() -> None:
 def profile(
     url: str = typer.Argument(..., help="Public social-profile URL to research."),
     json_output: bool = typer.Option(False, "--json", help="Output normalized data as JSON."),
+    evidence: bool = typer.Option(False, "--evidence", help="Show field provenance in human-readable output."),
 ) -> None:
     """Research publicly available information from a supported profile URL."""
     try:
@@ -33,6 +34,9 @@ def profile(
         profile_data = provider.collect(url)
     except ValueError as exc:
         raise typer.BadParameter(str(exc), param_hint="url") from exc
+    except Exception as exc:
+        console.print(f"[red]Collection failed:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
 
     if json_output:
         typer.echo(render_json(profile_data))
@@ -46,8 +50,27 @@ def profile(
     table.add_row("Username", profile_data.username or "—")
     table.add_row("Display name", profile_data.display_name or "—")
     table.add_row("Profile ID", profile_data.profile_id or "—")
+    table.add_row("Bio", profile_data.bio or "—")
+    table.add_row("Website", profile_data.website or "—")
     table.add_row("Collection", profile_data.metadata.get("collection_status", "unknown"))
     console.print(table)
+
+    if evidence and profile_data.evidence:
+        evidence_table = Table(title="Evidence")
+        evidence_table.add_column("Field", style="bold")
+        evidence_table.add_column("Value")
+        evidence_table.add_column("Method")
+        evidence_table.add_column("Confidence")
+        evidence_table.add_column("Source")
+        for item in profile_data.evidence:
+            evidence_table.add_row(
+                item.field,
+                item.value,
+                item.method,
+                f"{item.confidence:.2f}",
+                item.source_url,
+            )
+        console.print(evidence_table)
 
 
 if __name__ == "__main__":
