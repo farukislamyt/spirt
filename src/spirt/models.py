@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from spirt.evidence import Evidence
+
 
 @dataclass(slots=True)
 class SocialProfile:
@@ -17,6 +19,7 @@ class SocialProfile:
     location: str | None = None
     website: str | None = None
     links: list[str] = field(default_factory=list)
+    evidence: list[Evidence] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -31,5 +34,6 @@ class SocialProfile:
             "location": self.location,
             "website": self.website,
             "links": list(self.links),
+            "evidence": [item.to_dict() for item in self.evidence],
             "metadata": dict(self.metadata),
         }
