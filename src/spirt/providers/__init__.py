@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from spirt.models import SocialProfile
+from spirt.collection import CollectionResult
 
 
 class Provider(ABC):
@@ -15,7 +15,7 @@ class Provider(ABC):
         """Return whether this provider can handle the supplied URL."""
 
     @abstractmethod
-    def collect(self, url: str) -> SocialProfile:
+    def collect(self, url: str) -> CollectionResult:
         """Collect publicly available information from a supported profile."""
 
 
