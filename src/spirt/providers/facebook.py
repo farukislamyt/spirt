@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
+from spirt.evidence import Evidence
 from spirt.http import FetchError, fetch_text
 from spirt.models import SocialProfile
 from spirt.parsers import first_json_ld_value, parse_json_ld, parse_public_metadata
@@ -50,6 +51,16 @@ class FacebookProvider(Provider):
         image = metadata.get("og:image") or metadata.get("twitter:image")
         website = metadata.get("og:see_also") or metadata.get("profile:website")
 
+        evidence: list[Evidence] = []
+        if display_name:
+            evidence.append(Evidence("display_name", display_name, canonical, method="open_graph"))
+        if bio:
+            evidence.append(Evidence("bio", bio, canonical, method="open_graph"))
+        if image:
+            evidence.append(Evidence("public_image", image, canonical, method="open_graph"))
+        if website:
+            evidence.append(Evidence("website", website, canonical, method="open_graph"))
+
         return SocialProfile(
             platform=self.name,
             profile_url=canonical,
@@ -58,11 +69,11 @@ class FacebookProvider(Provider):
             bio=bio,
             website=website,
             links=[canonical],
+            evidence=evidence,
             metadata={
                 "collection_status": "success",
                 "source": {"type": "public_webpage", "url": url},
                 "open_graph": metadata,
                 "json_ld": json_ld,
-                **({"public_image": image} if image else {}),
             },
         )
