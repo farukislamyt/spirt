@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from spirt.http import FetchError
 from spirt.models import SocialProfile
 from spirt.providers.facebook import FacebookProvider
 from spirt.providers.registry import get_provider
@@ -43,8 +44,9 @@ def test_facebook_collect_normalizes_public_fields() -> None:
 
 
 def test_facebook_collect_reports_fetch_failure() -> None:
-    with patch("spirt.providers.facebook.fetch_text", side_effect=Exception("network failure")):
-        try:
-            FacebookProvider().collect("https://www.facebook.com/example")
-        except Exception as exc:
-            assert str(exc) == "network failure"
+    error = FetchError("network failure")
+    with patch("spirt.providers.facebook.fetch_text", side_effect=error):
+        profile = FacebookProvider().collect("https://www.facebook.com/example")
+
+    assert profile.metadata["collection_status"] == "unavailable"
+    assert profile.metadata["error"] == "network failure"
