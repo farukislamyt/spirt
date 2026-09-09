@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from spirt.http import FetchError, fetch_text
 from spirt.models import SocialProfile
-from spirt.parsers import parse_json_ld, parse_public_metadata
+from spirt.parsers import first_json_ld_value, parse_json_ld, parse_public_metadata
 from spirt.providers import Provider
 
 
@@ -39,18 +39,28 @@ class FacebookProvider(Provider):
 
         metadata = parse_public_metadata(html)
         json_ld = parse_json_ld(html)
-        display_name = metadata.get("og:title") or metadata.get("twitter:title") or metadata.get("title")
+        display_name = (
+            metadata.get("og:title")
+            or metadata.get("twitter:title")
+            or first_json_ld_value(json_ld, "name")
+            or metadata.get("title")
+        )
+        bio = metadata.get("og:description") or metadata.get("description")
         canonical = metadata.get("og:url") or url
-        image = metadata.get("og:image")
+        image = metadata.get("og:image") or metadata.get("twitter:image")
+        website = metadata.get("og:see_also") or metadata.get("profile:website")
 
         return SocialProfile(
             platform=self.name,
             profile_url=canonical,
             username=username,
             display_name=display_name,
+            bio=bio,
+            website=website,
             links=[canonical],
             metadata={
                 "collection_status": "success",
+                "source": {"type": "public_webpage", "url": url},
                 "open_graph": metadata,
                 "json_ld": json_ld,
                 **({"public_image": image} if image else {}),
