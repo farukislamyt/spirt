@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import typer
 from rich.console import Console
+from rich.table import Table
 
 from spirt import __version__
+from spirt.output import render_json
+from spirt.providers.registry import get_provider
 
 app = typer.Typer(
     name="spirt",
@@ -22,10 +25,29 @@ def version() -> None:
 @app.command()
 def profile(
     url: str = typer.Argument(..., help="Public social-profile URL to research."),
+    json_output: bool = typer.Option(False, "--json", help="Output normalized data as JSON."),
 ) -> None:
-    """Research a public social profile."""
-    console.print(f"[bold]SPIRT[/bold] profile target: {url}")
-    console.print("Provider collection will be added in the next implementation phase.")
+    """Research publicly available information from a supported profile URL."""
+    try:
+        provider = get_provider(url)
+        profile_data = provider.collect(url)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc), param_hint="url") from exc
+
+    if json_output:
+        typer.echo(render_json(profile_data))
+        return
+
+    table = Table(title="SPIRT Profile")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Platform", profile_data.platform)
+    table.add_row("Profile URL", profile_data.profile_url)
+    table.add_row("Username", profile_data.username or "—")
+    table.add_row("Display name", profile_data.display_name or "—")
+    table.add_row("Profile ID", profile_data.profile_id or "—")
+    table.add_row("Collection", profile_data.metadata.get("collection_status", "unknown"))
+    console.print(table)
 
 
 if __name__ == "__main__":
