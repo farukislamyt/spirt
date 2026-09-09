@@ -6,7 +6,7 @@ from rich.table import Table
 
 from spirt import __version__
 from spirt.collection import CollectionStatus
-from spirt.output import render_json
+from spirt.output import render_result_json
 from spirt.providers.registry import get_provider
 
 app = typer.Typer(
@@ -26,7 +26,7 @@ def version() -> None:
 @app.command()
 def profile(
     url: str = typer.Argument(..., help="Public social-profile URL to research."),
-    json_output: bool = typer.Option(False, "--json", help="Output normalized data as JSON."),
+    json_output: bool = typer.Option(False, "--json", help="Output collection result as JSON."),
     evidence: bool = typer.Option(False, "--evidence", help="Show field provenance in human-readable output."),
 ) -> None:
     """Research publicly available information from a supported profile URL."""
@@ -40,7 +40,7 @@ def profile(
         raise typer.Exit(code=1) from exc
 
     if json_output:
-        typer.echo(render_json(result.data) if result.data is not None else result.to_dict().__repr__())
+        typer.echo(render_result_json(result))
         if result.status is not CollectionStatus.SUCCESS:
             raise typer.Exit(code=1)
         return
