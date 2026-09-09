@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
+from spirt.collection import CollectionResult, CollectionStatus
 from spirt.http import FetchError, fetch_text
 from spirt.models import SocialProfile
 from spirt.normalizers import normalize_profile
@@ -20,7 +21,7 @@ class FacebookProvider(Provider):
         parsed = urlparse(url)
         return parsed.scheme == "https" and parsed.hostname in self._hosts
 
-    def collect(self, url: str) -> SocialProfile:
+    def collect(self, url: str) -> CollectionResult:
         """Fetch and normalize publicly exposed page metadata."""
         if not self.supports(url):
             raise ValueError("Unsupported Facebook URL")
@@ -31,25 +32,30 @@ class FacebookProvider(Provider):
         try:
             html = fetch_text(url)
         except FetchError as exc:
-            return SocialProfile(
+            profile = SocialProfile(
                 platform=self.name,
                 profile_url=url,
                 username=username,
-                metadata={"collection_status": "unavailable", "error": str(exc)},
+                metadata={"collection_status": CollectionStatus.UNAVAILABLE.value, "error": str(exc)},
             )
+            return CollectionResult(CollectionStatus.UNAVAILABLE, data=profile, error=str(exc))
 
-        metadata = parse_public_metadata(html)
-        json_ld = parse_json_ld(html)
-        normalized = normalize_profile(
-            platform=self.name,
-            profile_url=url,
-            username=username,
-            metadata={
-                "collection_status": "success",
-                "source": {"type": "public_webpage", "url": url},
-                "open_graph": metadata,
-                "json_ld": json_ld,
-            },
-            json_ld=json_ld,
-        )
-        return normalized
+        try:
+            metadata = parse_public_metadata(html)
+            json_ld = parse_json_ld(html)
+            profile = normalize_profile(
+                platform=self.name,
+                profile_url=url,
+                username=username,
+                metadata={
+                    "collection_status": CollectionStatus.SUCCESS.value,
+                    "source": {"type": "public_webpage", "url": url},
+                    "open_graph": metadata,
+                    "json_ld": json_ld,
+                },
+                json_ld=json_ld,
+            )
+        except Exception as exc:
+            return CollectionResult(CollectionStatus.FAILED, error=str(exc))
+
+        return CollectionResult(CollectionStatus.SUCCESS, data=profile)
