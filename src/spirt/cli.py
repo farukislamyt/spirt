@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.table import Table
 
 from spirt import __version__
+from spirt.collection import CollectionStatus
 from spirt.output import render_json
 from spirt.providers.registry import get_provider
 
@@ -31,7 +32,7 @@ def profile(
     """Research publicly available information from a supported profile URL."""
     try:
         provider = get_provider(url)
-        profile_data = provider.collect(url)
+        result = provider.collect(url)
     except ValueError as exc:
         raise typer.BadParameter(str(exc), param_hint="url") from exc
     except Exception as exc:
@@ -39,9 +40,16 @@ def profile(
         raise typer.Exit(code=1) from exc
 
     if json_output:
-        typer.echo(render_json(profile_data))
+        typer.echo(render_json(result.data) if result.data is not None else result.to_dict().__repr__())
+        if result.status is not CollectionStatus.SUCCESS:
+            raise typer.Exit(code=1)
         return
 
+    if result.data is None:
+        console.print(f"[red]Collection {result.status.value}:[/red] {result.error or 'no data returned'}")
+        raise typer.Exit(code=1)
+
+    profile_data = result.data
     table = Table(title="SPIRT Profile")
     table.add_column("Field", style="bold")
     table.add_column("Value")
@@ -52,7 +60,7 @@ def profile(
     table.add_row("Profile ID", profile_data.profile_id or "—")
     table.add_row("Bio", profile_data.bio or "—")
     table.add_row("Website", profile_data.website or "—")
-    table.add_row("Collection", profile_data.metadata.get("collection_status", "unknown"))
+    table.add_row("Collection", result.status.value)
     console.print(table)
 
     if evidence and profile_data.evidence:
