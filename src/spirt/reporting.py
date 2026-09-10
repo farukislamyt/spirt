@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from spirt.collection import CollectionResult
 from spirt.correlation import correlate
@@ -11,7 +11,7 @@ def build_report(results: list[CollectionResult]) -> dict[str, object]:
     profiles = [r.data for r in results if r.data is not None and hasattr(r.data, "platform")]
     return {
         "tool": "SPIRT",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "results": [r.to_dict() for r in results],
         "correlations": [m.to_dict() for m in correlate(profiles)],
     }
