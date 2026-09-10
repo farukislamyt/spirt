@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 from urllib.parse import urlparse
 
 from spirt.collection import CollectionResult, CollectionStatus
@@ -72,7 +72,7 @@ class MetadataProvider(Provider):
                 json_ld=json_ld,
             )
             return CollectionResult(CollectionStatus.SUCCESS, data=profile)
-        except Exception as exc:
+        except (KeyError, TypeError, ValueError) as exc:
             return CollectionResult(CollectionStatus.FAILED, error=str(exc))
 
 
