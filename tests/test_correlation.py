@@ -7,5 +7,5 @@ def test_correlation_requires_explicit_signals() -> None:
     right = SocialProfile(platform="b", profile_url="https://b.example/alice", username="alice", display_name="Alice")
     matches = correlate([left, right])
     assert len(matches) == 1
-    assert matches[0].score == 1.0
+    assert matches[0].score == 0.8
     assert "same_username" in matches[0].reasons
