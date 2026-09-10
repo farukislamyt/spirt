@@ -40,7 +40,10 @@ def test_facebook_collect_returns_success_result() -> None:
     assert result.data.display_name == "Example User"
     assert result.data.bio == "A public profile example"
     assert result.data.metadata["collection_status"] == "success"
-    assert result.data.metadata["public_image"] == "https://example.com/profile.jpg"
+    assert any(
+        item.field == "public_image" and item.value == "https://example.com/profile.jpg"
+        for item in result.data.evidence
+    )
 
 
 def test_facebook_collect_reports_fetch_failure() -> None:
