@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "spirt"
-version = "0.9.0"
+version = "1.0.0"
 description = "Social Profile Intelligence Research Toolkit for public-profile OSINT."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -18,6 +18,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
 api = ["fastapi>=0.115", "uvicorn>=0.30"]
+
+[project.urls]
+Homepage = "https://github.com/farukislamyt/spirt"
+Repository = "https://github.com/farukislamyt/spirt"
+Issues = "https://github.com/farukislamyt/spirt/issues"
 
 [project.scripts]
 spirt = "spirt.cli:app"
