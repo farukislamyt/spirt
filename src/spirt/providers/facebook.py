@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import ClassVar
 from urllib.parse import urlparse
 
 from spirt.collection import CollectionResult, CollectionStatus
@@ -14,7 +15,9 @@ class FacebookProvider(Provider):
     """Research metadata that is publicly exposed by a Facebook profile page."""
 
     name = "facebook"
-    _hosts = {"facebook.com", "www.facebook.com", "m.facebook.com", "mbasic.facebook.com"}
+    _hosts: ClassVar[frozenset[str]] = frozenset(
+        {"facebook.com", "www.facebook.com", "m.facebook.com", "mbasic.facebook.com"}
+    )
 
     def supports(self, url: str) -> bool:
         """Return True for Facebook HTTPS profile URLs."""
@@ -55,7 +58,7 @@ class FacebookProvider(Provider):
                 },
                 json_ld=json_ld,
             )
-        except Exception as exc:
+        except (KeyError, TypeError, ValueError) as exc:
             return CollectionResult(CollectionStatus.FAILED, error=str(exc))
 
         return CollectionResult(CollectionStatus.SUCCESS, data=profile)
