@@ -12,7 +12,7 @@ def fetch_text(url: str, *, timeout: float = 10.0) -> str:
     """Fetch a public HTTPS document with a bounded timeout."""
     request = Request(
         url,
-        headers={"User-Agent": "SPIRT/0.2 (+https://github.com/farukislamyt/spirt)"},
+        headers={"User-Agent": "SPIRT/1.0 (+https://github.com/farukislamyt/spirt)"},
         method="GET",
     )
     try:
