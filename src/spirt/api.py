@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from spirt import __version__
 from spirt.providers.registry import get_provider
 
 
@@ -10,7 +11,7 @@ def create_app():
     except ImportError as exc:
         raise RuntimeError("Install the API extra with `pip install 'spirt[api]'`.") from exc
 
-    app = FastAPI(title="SPIRT API", version="0.9.0")
+    app = FastAPI(title="SPIRT API", version=__version__)
 
     @app.get("/health")
     def health() -> dict[str, str]:
