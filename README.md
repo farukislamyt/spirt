@@ -6,11 +6,11 @@ Research public profiles. Discover social intelligence.
 
 SPIRT is an open-source OSINT toolkit for discovering, collecting, normalizing, correlating, and reporting information that is genuinely publicly available on social-profile pages.
 
-## 0.9 architecture
+## 1.0 architecture
 
 `Provider → Collector → Parser → Normalizer → Evidence → Output`
 
-The toolkit now includes:
+The toolkit includes:
 
 - Multi-platform provider registry: Facebook, Instagram, LinkedIn, X/Twitter, TikTok, and GitHub.
 - Common `CollectionResult` and provider contract.
@@ -20,6 +20,7 @@ The toolkit now includes:
 - JSON and Markdown research reports.
 - Batch collection through the CLI and Python API.
 - Optional FastAPI service (`spirt[api]`).
+- Continuous integration across Python 3.11, 3.12, and 3.13.
 
 ## CLI
 
@@ -51,4 +52,6 @@ Platform availability depends on what the target site exposes publicly at collec
 - [x] v0.7.0 Cross-platform correlation
 - [x] v0.8.0 Reports
 - [x] v0.9.0 API and automation foundations
-- [ ] v1.0.0 Stable production release
+- [x] v1.0.0 Stable production release
+
+See `CHANGELOG.md` for release history and `SECURITY.md` for the security policy.
