@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import typer
@@ -7,12 +8,12 @@ from rich.console import Console
 from rich.table import Table
 
 from spirt import __version__
+from spirt.automation import collect_many
 from spirt.collection import CollectionStatus
 from spirt.discovery import discover_profiles
 from spirt.output import render_result_json
 from spirt.providers.registry import get_provider, list_providers
 from spirt.reporting import render_report_json, render_report_markdown
-from spirt.automation import collect_many
 
 app = typer.Typer(name="spirt", help="Social Profile Intelligence Research Toolkit for public-profile OSINT.", no_args_is_help=True)
 console = Console()
@@ -38,10 +39,12 @@ def providers() -> None:
 
 
 @app.command()
-def discover(file: Path = typer.Argument(..., exists=True, readable=True, help="Text/HTML file to scan for supported profile URLs.")) -> None:
+def discover(
+    file: Path = typer.Argument(..., exists=True, readable=True, help="Text/HTML file to scan for supported profile URLs.")
+) -> None:
     """Discover supported public-profile URLs without contacting them."""
     profiles = discover_profiles(file.read_text(encoding="utf-8", errors="replace"))
-    typer.echo(__import__("json").dumps(profiles, indent=2))
+    typer.echo(json.dumps(profiles, indent=2))
 
 
 @app.command()
@@ -73,10 +76,16 @@ def profile(
     table = Table(title="SPIRT Profile")
     table.add_column("Field", style="bold")
     table.add_column("Value")
-    for label, value in (("Platform", profile_data.platform), ("Profile URL", profile_data.profile_url),
-                         ("Username", profile_data.username or "—"), ("Display name", profile_data.display_name or "—"),
-                         ("Profile ID", profile_data.profile_id or "—"), ("Bio", profile_data.bio or "—"),
-                         ("Website", profile_data.website or "—"), ("Collection", result.status.value)):
+    for label, value in (
+        ("Platform", profile_data.platform),
+        ("Profile URL", profile_data.profile_url),
+        ("Username", profile_data.username or "—"),
+        ("Display name", profile_data.display_name or "—"),
+        ("Profile ID", profile_data.profile_id or "—"),
+        ("Bio", profile_data.bio or "—"),
+        ("Website", profile_data.website or "—"),
+        ("Collection", result.status.value),
+    ):
         table.add_row(label, value)
     console.print(table)
     if evidence and profile_data.evidence:
