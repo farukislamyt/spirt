@@ -8,7 +8,7 @@ from spirt.http import FetchError, fetch_text
 from spirt.models import SocialProfile
 from spirt.normalizers import normalize_profile
 from spirt.parsers import parse_json_ld, parse_public_metadata
-from spirt.providers import Provider
+from spirt.providers import Provider, host_matches, parse_provider_url
 
 
 class FacebookProvider(Provider):
@@ -20,9 +20,9 @@ class FacebookProvider(Provider):
     )
 
     def supports(self, url: str) -> bool:
-        """Return True for Facebook HTTPS profile URLs."""
-        parsed = urlparse(url)
-        return parsed.scheme == "https" and parsed.hostname in self._hosts
+        """Return True only for valid HTTPS Facebook profile URLs."""
+        parsed = parse_provider_url(url)
+        return parsed is not None and host_matches(parsed, self._hosts)
 
     def collect(self, url: str) -> CollectionResult:
         """Fetch and normalize publicly exposed page metadata."""
