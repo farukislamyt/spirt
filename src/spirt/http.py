@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import ipaddress
+import socket
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 class FetchError(RuntimeError):
@@ -17,6 +19,35 @@ def _validate_url(url: str) -> None:
     parsed = urlparse(url)
     if parsed.scheme != "https" or not parsed.netloc:
         raise FetchError("Only absolute HTTPS URLs are supported")
+    if parsed.username is not None or parsed.password is not None:
+        raise FetchError("URLs containing credentials are not supported")
+    try:
+        parsed.port
+    except ValueError as exc:
+        raise FetchError("Invalid URL port") from exc
+
+    host = parsed.hostname
+    if not host:
+        raise FetchError("URL must contain a hostname")
+
+    try:
+        addresses = {
+            ipaddress.ip_address(info[4][0])
+            for info in socket.getaddrinfo(host, parsed.port or 443, type=socket.SOCK_STREAM)
+        }
+    except (OSError, ValueError) as exc:
+        raise FetchError("Unable to resolve profile host") from exc
+
+    if not addresses or any(not address.is_global for address in addresses):
+        raise FetchError("Profile host resolves to a non-public network address")
+
+
+class _SafeRedirectHandler(HTTPRedirectHandler):
+    """Allow redirects only when the destination passes the same URL policy."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        _validate_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 def fetch_text(
@@ -25,7 +56,7 @@ def fetch_text(
     timeout: float = DEFAULT_TIMEOUT,
     max_bytes: int = DEFAULT_MAX_BYTES,
 ) -> str:
-    """Fetch a bounded public HTTPS document with a bounded timeout."""
+    """Fetch a bounded public HTTPS document with SSRF-safe redirects."""
     _validate_url(url)
     if timeout <= 0:
         raise ValueError("timeout must be greater than 0")
@@ -37,8 +68,9 @@ def fetch_text(
         headers={"User-Agent": "SPIRT/1.0 (+https://github.com/farukislamyt/spirt)"},
         method="GET",
     )
+    opener = build_opener(_SafeRedirectHandler)
     try:
-        with urlopen(request, timeout=timeout) as response:
+        with opener.open(request, timeout=timeout) as response:
             content_type = response.headers.get_content_type()
             if content_type not in {"text/html", "application/xhtml+xml"}:
                 raise FetchError(f"Unsupported content type: {content_type}")
