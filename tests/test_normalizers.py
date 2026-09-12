@@ -36,3 +36,14 @@ def test_normalize_profile_falls_back_to_json_ld() -> None:
 
     assert profile.display_name == "JSON Person"
     assert profile.username == "person"
+
+
+def test_normalize_profile_rejects_unsafe_canonical_metadata() -> None:
+    profile = normalize_profile(
+        platform="example",
+        profile_url="https://example.com/person",
+        metadata={"open_graph": {"og:url": "http://internal.example/person"}},
+    )
+
+    assert profile.profile_url == "https://example.com/person"
+    assert profile.links == ["https://example.com/person"]
