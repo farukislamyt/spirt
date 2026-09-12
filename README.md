@@ -17,10 +17,16 @@ The toolkit includes:
 - Public-web metadata parsing with evidence provenance.
 - URL discovery from text/HTML without contacting discovered URLs.
 - Explainable cross-platform correlation using explicit shared signals.
-- JSON and Markdown research reports.
+- JSON, Markdown, and HTML research reports.
 - Batch collection through the CLI and Python API.
 - Optional FastAPI service (`spirt[api]`).
 - Continuous integration across Python 3.11, 3.12, and 3.13.
+
+## Documentation
+
+The [SPIRT documentation hub](docs/index.md) covers installation, provider capabilities, username OSINT, profile investigation, the API, report schema, and the public-data security boundary.
+
+A static, SEO-ready landing page is maintained in `site/` for a future GitHub Pages deployment.
 
 ## CLI
 
