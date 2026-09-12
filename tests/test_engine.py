@@ -1,8 +1,7 @@
 from __future__ import annotations
 
+import asyncio
 import time
-
-import pytest
 
 from spirt.collection import CollectionErrorCode, CollectionResult, CollectionStatus
 from spirt.engine import CollectionCache, ProviderHealthTracker, collect_many, collect_many_async
@@ -63,16 +62,17 @@ def test_collect_many_concurrency_reduces_wall_time() -> None:
     assert elapsed < 0.24
 
 
-@pytest.mark.asyncio
-async def test_async_engine_uses_cache() -> None:
+def test_async_engine_uses_cache() -> None:
     provider = FakeProvider()
     cache = CollectionCache(ttl=60)
 
-    first = await collect_many_async(["https://example.test/a"], providers=[provider], cache=cache)
-    second = await collect_many_async(["https://example.test/a"], providers=[provider], cache=cache)
+    async def run() -> None:
+        first = await collect_many_async(["https://example.test/a"], providers=[provider], cache=cache)
+        second = await collect_many_async(["https://example.test/a"], providers=[provider], cache=cache)
+        assert first[0].status is CollectionStatus.SUCCESS
+        assert second[0].status is CollectionStatus.SUCCESS
 
-    assert first[0].status is CollectionStatus.SUCCESS
-    assert second[0].status is CollectionStatus.SUCCESS
+    asyncio.run(run())
     assert provider.calls == 1
 
 
