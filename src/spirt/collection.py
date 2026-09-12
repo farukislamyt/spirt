@@ -34,9 +34,10 @@ class CollectionResult:
         if self.status is CollectionStatus.SUCCESS and self.data is None:
             raise ValueError("successful collection results must contain data")
 
-        if self.status in {CollectionStatus.UNAVAILABLE, CollectionStatus.FAILED}:
-            if self.error is None or not self.error.strip():
-                raise ValueError(f"{self.status.value} collection results must contain an error")
+        if self.status in {CollectionStatus.UNAVAILABLE, CollectionStatus.FAILED} and (
+            self.error is None or not self.error.strip()
+        ):
+            raise ValueError(f"{self.status.value} collection results must contain an error")
 
     def to_dict(self) -> dict[str, Any]:
         return {
