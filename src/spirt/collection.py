@@ -16,11 +16,27 @@ class CollectionStatus(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class CollectionResult:
-    """Structured result for a collection operation."""
+    """Structured result for a collection operation.
+
+    A successful result must contain collected data. Failed and unavailable
+    results must explain the failure so callers can distinguish an empty
+    result from an unsuccessful collection attempt.
+    """
 
     status: CollectionStatus
     data: Any = None
     error: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.status, CollectionStatus):
+            raise TypeError("status must be a CollectionStatus")
+
+        if self.status is CollectionStatus.SUCCESS and self.data is None:
+            raise ValueError("successful collection results must contain data")
+
+        if self.status in {CollectionStatus.UNAVAILABLE, CollectionStatus.FAILED}:
+            if self.error is None or not self.error.strip():
+                raise ValueError(f"{self.status.value} collection results must contain an error")
 
     def to_dict(self) -> dict[str, Any]:
         return {
