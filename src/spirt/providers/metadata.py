@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
-from spirt.collection import CollectionResult, CollectionStatus
+from spirt.collection import CollectionErrorCode, CollectionResult, CollectionStatus
 from spirt.http import FetchError, fetch_text
 from spirt.models import SocialProfile
 from spirt.normalizers import normalize_profile
@@ -57,7 +57,11 @@ class MetadataProvider(Provider):
 
     def collect(self, url: str) -> CollectionResult:
         if not self.supports(url):
-            raise ValueError(f"Unsupported {self.name} URL")
+            return CollectionResult(
+                CollectionStatus.FAILED,
+                error=f"Unsupported {self.name} URL",
+                error_code=CollectionErrorCode.UNSUPPORTED_URL,
+            )
         parts = [part for part in urlparse(url).path.split("/") if part]
         username = parts[0] if parts else None
         try:
@@ -72,6 +76,7 @@ class MetadataProvider(Provider):
                     metadata={"collection_status": CollectionStatus.UNAVAILABLE.value, "error": str(exc)},
                 ),
                 error=str(exc),
+                error_code=CollectionErrorCode.NETWORK_UNAVAILABLE,
             )
         try:
             metadata = parse_public_metadata(html)
@@ -90,7 +95,11 @@ class MetadataProvider(Provider):
             )
             return CollectionResult(CollectionStatus.SUCCESS, data=profile)
         except (KeyError, TypeError, ValueError) as exc:
-            return CollectionResult(CollectionStatus.FAILED, error=str(exc))
+            return CollectionResult(
+                CollectionStatus.FAILED,
+                error=str(exc),
+                error_code=CollectionErrorCode.PARSE_ERROR,
+            )
 
 
 def platform_provider(name: str, hosts: Iterable[str], notes: str) -> MetadataProvider:
