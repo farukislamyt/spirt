@@ -9,7 +9,7 @@ from spirt.http import FetchError, fetch_text
 from spirt.models import SocialProfile
 from spirt.normalizers import normalize_profile
 from spirt.parsers import parse_json_ld, parse_public_metadata
-from spirt.providers import Provider
+from spirt.providers import Provider, host_matches, parse_provider_url
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,6 +22,18 @@ class ProviderCapabilities:
     official_api: bool = False
     notes: str = ""
 
+    def __post_init__(self) -> None:
+        if not self.platform.strip():
+            raise ValueError("provider platform must not be empty")
+        if not self.hosts:
+            raise ValueError("provider hosts must not be empty")
+        normalized = frozenset(host.strip().lower().rstrip(".") for host in self.hosts)
+        if any(not host or "." not in host for host in normalized):
+            raise ValueError("provider hosts must be valid domain names")
+        object.__setattr__(self, "hosts", normalized)
+        if not self.public_web_metadata and not self.official_api:
+            raise ValueError("provider must declare at least one collection capability")
+
 
 @dataclass(slots=True)
 class MetadataProvider(Provider):
@@ -32,11 +44,16 @@ class MetadataProvider(Provider):
     _hosts: frozenset[str] = field(init=False)
 
     def __post_init__(self) -> None:
+        if not self.name.strip():
+            raise ValueError("provider name must not be empty")
+        if self.name != self.capabilities.platform:
+            raise ValueError("provider name must match capability platform")
         object.__setattr__(self, "_hosts", self.capabilities.hosts)
 
     def supports(self, url: str) -> bool:
-        parsed = urlparse(url)
-        return parsed.scheme == "https" and parsed.hostname in self._hosts
+        """Return True only for valid HTTPS URLs on declared provider hosts."""
+        parsed = parse_provider_url(url)
+        return parsed is not None and host_matches(parsed, self._hosts)
 
     def collect(self, url: str) -> CollectionResult:
         if not self.supports(url):
