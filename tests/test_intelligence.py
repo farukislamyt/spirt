@@ -20,7 +20,7 @@ def test_entity_resolution_requires_threshold() -> None:
     right = SocialProfile(platform="b", profile_url="https://b.example/alice", username="alice", display_name="Alice")
     matches = entity_resolution([left, right])
     assert len(matches) == 1
-    assert matches[0].score == 0.8
+    assert matches[0].score == pytest.approx(0.8)
     assert matches[0].reasons == ("same_username", "same_display_name")
 
 
@@ -34,4 +34,4 @@ def test_evidence_graph_materializes_explicit_signals() -> None:
     right = SocialProfile(platform="b", profile_url="https://b.example/alice", username="alice", website="https://example.org")
     edges = build_evidence_graph([left, right])
     assert {edge.signal for edge in edges} == {"same_username", "same_website"}
-    assert sum(edge.weight for edge in edges) == 0.9
+    assert sum(edge.weight for edge in edges) == pytest.approx(0.9)
