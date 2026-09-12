@@ -2,16 +2,25 @@ import pytest
 
 from spirt.collection import CollectionErrorCode, CollectionResult, CollectionStatus
 from spirt.models import SocialProfile
-from spirt.providers import host_matches, parse_provider_url
+from spirt.providers import Provider, host_matches, parse_provider_url
 from spirt.providers.metadata import MetadataProvider, ProviderCapabilities
 
 
-class FakeProvider(MetadataProvider):
-    def __init__(self) -> None:
-        super().__init__(
-            name="fake",
-            capabilities=ProviderCapabilities(platform="fake", hosts=frozenset({"fake.example"})),
-        )
+class FakeProvider(Provider):
+    name = "fake"
+
+    def supports(self, url: str) -> bool:
+        parsed = parse_provider_url(url)
+        return parsed is not None and host_matches(parsed, frozenset({"fake.example"}))
+
+    def collect(self, url: str) -> CollectionResult:
+        if not self.supports(url):
+            return CollectionResult(
+                CollectionStatus.FAILED,
+                error="Unsupported fake URL",
+                error_code=CollectionErrorCode.UNSUPPORTED_URL,
+            )
+        return CollectionResult(CollectionStatus.SUCCESS, SocialProfile(platform=self.name, profile_url=url))
 
 
 def test_provider_contract_is_platform_agnostic() -> None:
