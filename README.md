@@ -22,11 +22,20 @@ The toolkit includes:
 - Optional FastAPI service (`spirt[api]`).
 - Continuous integration across Python 3.11, 3.12, and 3.13.
 
-## Documentation
+## Documentation and web presence
 
-The [SPIRT documentation hub](docs/index.md) covers installation, provider capabilities, username OSINT, profile investigation, the API, report schema, and the public-data security boundary.
+- [Documentation hub](docs/index.md)
+- [Getting started](docs/getting-started.md)
+- [Provider documentation](docs/providers/index.md)
+- [Username OSINT guide](docs/guides/username-osint.md)
+- [Profile investigation guide](docs/guides/profile-investigation.md)
+- [API reference](docs/api.md)
+- [Report schema](docs/report-schema.md)
+- [Security and public-data boundary](docs/security/public-data-boundary.md)
 
-A static, SEO-ready landing page is maintained in `site/` for a future GitHub Pages deployment.
+The repository also contains a static, SEO-ready public site under `docs/site/`, with canonical metadata, Open Graph tags, JSON-LD structured data, provider landing pages, `robots.txt`, and an XML sitemap. A GitHub Pages deployment workflow is included; the configured Pages URL is the intended public-site canonical.
+
+SPIRT is intentionally positioned around descriptive search intent such as **open-source OSINT toolkit**, **social profile OSINT tool**, **public profile OSINT**, **social media intelligence toolkit**, **OSINT profile investigation**, **cross-platform username OSINT**, and **Python OSINT toolkit** rather than relying on the ambiguous standalone name “SPIRT”.
 
 ## CLI
 
