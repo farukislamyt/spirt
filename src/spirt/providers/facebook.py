@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import ClassVar
 from urllib.parse import urlparse
 
-from spirt.collection import CollectionResult, CollectionStatus
+from spirt.collection import CollectionErrorCode, CollectionResult, CollectionStatus
 from spirt.http import FetchError, fetch_text
 from spirt.models import SocialProfile
 from spirt.normalizers import normalize_profile
 from spirt.parsers import parse_json_ld, parse_public_metadata
-from spirt.providers import Provider
+from spirt.providers import Provider, host_matches, parse_provider_url
 
 
 class FacebookProvider(Provider):
@@ -20,14 +20,18 @@ class FacebookProvider(Provider):
     )
 
     def supports(self, url: str) -> bool:
-        """Return True for Facebook HTTPS profile URLs."""
-        parsed = urlparse(url)
-        return parsed.scheme == "https" and parsed.hostname in self._hosts
+        """Return True only for valid HTTPS Facebook profile URLs."""
+        parsed = parse_provider_url(url)
+        return parsed is not None and host_matches(parsed, self._hosts)
 
     def collect(self, url: str) -> CollectionResult:
         """Fetch and normalize publicly exposed page metadata."""
         if not self.supports(url):
-            raise ValueError("Unsupported Facebook URL")
+            return CollectionResult(
+                CollectionStatus.FAILED,
+                error="Unsupported Facebook URL",
+                error_code=CollectionErrorCode.UNSUPPORTED_URL,
+            )
 
         parts = [part for part in urlparse(url).path.split("/") if part]
         username = parts[0] if parts and parts[0] != "profile.php" else None
@@ -41,7 +45,12 @@ class FacebookProvider(Provider):
                 username=username,
                 metadata={"collection_status": CollectionStatus.UNAVAILABLE.value, "error": str(exc)},
             )
-            return CollectionResult(CollectionStatus.UNAVAILABLE, data=profile, error=str(exc))
+            return CollectionResult(
+                CollectionStatus.UNAVAILABLE,
+                data=profile,
+                error=str(exc),
+                error_code=CollectionErrorCode.NETWORK_UNAVAILABLE,
+            )
 
         try:
             metadata = parse_public_metadata(html)
@@ -59,6 +68,10 @@ class FacebookProvider(Provider):
                 json_ld=json_ld,
             )
         except (KeyError, TypeError, ValueError) as exc:
-            return CollectionResult(CollectionStatus.FAILED, error=str(exc))
+            return CollectionResult(
+                CollectionStatus.FAILED,
+                error=str(exc),
+                error_code=CollectionErrorCode.PARSE_ERROR,
+            )
 
         return CollectionResult(CollectionStatus.SUCCESS, data=profile)

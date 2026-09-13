@@ -40,7 +40,12 @@ def providers() -> None:
 
 @app.command()
 def discover(
-    file: Path = typer.Argument(..., exists=True, readable=True, help="Text/HTML file to scan for supported profile URLs.")
+    file: Path = typer.Argument(  # noqa: B008
+        ...,
+        exists=True,
+        readable=True,
+        help="Text/HTML file to scan for supported profile URLs.",
+    )
 ) -> None:
     """Discover supported public-profile URLs without contacting them."""
     profiles = discover_profiles(file.read_text(encoding="utf-8", errors="replace"))
@@ -99,9 +104,9 @@ def profile(
 
 @app.command()
 def report(
-    urls: list[str] = typer.Argument(..., help="One or more supported public-profile URLs."),
-    output: Path | None = typer.Option(None, "--output", "-o", help="Write the report to a file."),
-    markdown: bool = typer.Option(False, "--markdown", help="Render Markdown instead of JSON."),
+    urls: list[str] = typer.Argument(..., help="One or more supported public-profile URLs."),  # noqa: B008
+    output: Path | None = typer.Option(None, "--output", "-o", help="Write the report to a file."),  # noqa: B008
+    markdown: bool = typer.Option(False, "--markdown", help="Render Markdown instead of JSON."),  # noqa: B008
 ) -> None:
     """Collect multiple profiles and generate a correlation-aware report."""
     results = collect_many(urls)

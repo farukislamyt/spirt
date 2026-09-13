@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/farukislamyt/spirt/schema/report-1.0.json",
+  "title": "SPIRT Research Report",
+  "type": "object",
+  "required": ["tool", "schema_version", "generated_at", "results", "correlations", "evidence_graph", "timeline"],
+  "properties": {
+    "tool": {"const": "SPIRT"},
+    "schema_version": {"const": "1.0"},
+    "generated_at": {"type": "string"},
+    "results": {"type": "array"},
+    "correlations": {"type": "array"},
+    "evidence_graph": {"type": "array"},
+    "timeline": {"type": "array"}
+  },
+  "additionalProperties": true
+}

@@ -15,6 +15,20 @@ def _first_text(*values: Any) -> str | None:
     return None
 
 
+def _safe_canonical(candidate: Any, fallback: str) -> str:
+    value = _first_text(candidate)
+    if value:
+        parsed = urlparse(value)
+        if parsed.scheme == "https" and parsed.netloc and not parsed.username and not parsed.password:
+            try:
+                parsed.port
+            except ValueError:
+                pass
+            else:
+                return value
+    return fallback
+
+
 def normalize_profile(
     *,
     platform: str,
@@ -37,7 +51,7 @@ def normalize_profile(
         open_graph.get("title"),
     )
     bio = _first_text(open_graph.get("og:description"), open_graph.get("description"))
-    canonical = _first_text(open_graph.get("og:url"), profile_url) or profile_url
+    canonical = _safe_canonical(open_graph.get("og:url"), profile_url)
     website = _first_text(open_graph.get("og:see_also"), open_graph.get("profile:website"))
     image = _first_text(open_graph.get("og:image"), open_graph.get("twitter:image"))
 
@@ -65,6 +79,7 @@ def normalize_profile(
             "bio": "og:description|description",
             "website": "og:see_also|profile:website",
             "public_image": "og:image|twitter:image",
+            "canonical_url": "og:url|profile_url",
         },
     }
 

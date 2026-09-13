@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from urllib.parse import SplitResult, urlsplit
 
 from spirt.collection import CollectionResult
 
@@ -19,4 +20,35 @@ class Provider(ABC):
         """Collect publicly available information from a supported profile."""
 
 
-__all__ = ["Provider"]
+def parse_provider_url(url: str) -> SplitResult | None:
+    """Parse a provider URL without performing network access.
+
+    Provider routing is intentionally syntax-only; DNS/IP safety is enforced by
+    the HTTP fetch layer immediately before a public document is requested.
+    """
+    if not isinstance(url, str) or not url.strip():
+        return None
+    try:
+        parsed = urlsplit(url)
+        if parsed.scheme.lower() != "https" or not parsed.hostname:
+            return None
+        if parsed.username is not None or parsed.password is not None:
+            return None
+        try:
+            parsed.port
+        except ValueError:
+            return None
+    except ValueError:
+        return None
+    return parsed
+
+
+def host_matches(parsed: SplitResult, hosts: frozenset[str]) -> bool:
+    """Return True only when the parsed hostname exactly matches a capability."""
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+    return hostname.rstrip(".").lower() in hosts
+
+
+__all__ = ["Provider", "host_matches", "parse_provider_url"]

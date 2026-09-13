@@ -17,10 +17,25 @@ The toolkit includes:
 - Public-web metadata parsing with evidence provenance.
 - URL discovery from text/HTML without contacting discovered URLs.
 - Explainable cross-platform correlation using explicit shared signals.
-- JSON and Markdown research reports.
+- JSON, Markdown, and HTML research reports.
 - Batch collection through the CLI and Python API.
 - Optional FastAPI service (`spirt[api]`).
 - Continuous integration across Python 3.11, 3.12, and 3.13.
+
+## Documentation and web presence
+
+- [Documentation hub](docs/index.md)
+- [Getting started](docs/getting-started.md)
+- [Provider documentation](docs/providers/index.md)
+- [Username OSINT guide](docs/guides/username-osint.md)
+- [Profile investigation guide](docs/guides/profile-investigation.md)
+- [API reference](docs/api.md)
+- [Report schema](docs/report-schema.md)
+- [Security and public-data boundary](docs/security/public-data-boundary.md)
+
+The repository also contains a static, SEO-ready public site under `docs/site/`, with canonical metadata, Open Graph tags, JSON-LD structured data, provider landing pages, `robots.txt`, and an XML sitemap. A GitHub Pages deployment workflow is included; the configured Pages URL is the intended public-site canonical.
+
+SPIRT is intentionally positioned around descriptive search intent such as **open-source OSINT toolkit**, **social profile OSINT tool**, **public profile OSINT**, **social media intelligence toolkit**, **OSINT profile investigation**, **cross-platform username OSINT**, and **Python OSINT toolkit** rather than relying on the ambiguous standalone name “SPIRT”.
 
 ## CLI
 

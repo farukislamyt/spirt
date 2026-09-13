@@ -1,17 +1,25 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
-from spirt.collection import CollectionResult, CollectionStatus
-from spirt.providers.registry import get_provider
+from spirt.collection import CollectionResult
+from spirt.engine import CollectionCache, ProviderHealthTracker, collect_many as _collect_many
+from spirt.providers import Provider
 
 
-def collect_many(urls: Iterable[str]) -> list[CollectionResult]:
-    """Collect a deterministic batch without bypassing provider access controls."""
-    results: list[CollectionResult] = []
-    for url in dict.fromkeys(urls):
-        try:
-            results.append(get_provider(url).collect(url))
-        except ValueError as exc:
-            results.append(CollectionResult(CollectionStatus.FAILED, error=str(exc)))
-    return results
+def collect_many(
+    urls: Iterable[str],
+    *,
+    providers: Sequence[Provider] | None = None,
+    max_concurrency: int = 8,
+    cache: CollectionCache | None = None,
+    health: ProviderHealthTracker | None = None,
+) -> list[CollectionResult]:
+    """Collect a deterministic batch using the concurrent collection engine."""
+    return _collect_many(
+        urls,
+        providers=providers,
+        max_concurrency=max_concurrency,
+        cache=cache,
+        health=health,
+    )
